@@ -10,7 +10,6 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         DropTab()
-			.padding()
-			.frame(width: 800, height: 500)
+			.frame(minWidth: 500, idealWidth: 600, minHeight: 400, idealHeight: 500)
     }
 }
