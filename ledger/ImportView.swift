@@ -1,5 +1,5 @@
 //
-//  DropTab.swift
+//  ImportView.swift
 //  ledger
 //
 //  Created by Chris McElroy on 11/8/22.
@@ -9,14 +9,13 @@ import SwiftUI
 
 // drag and drop from https://stackoverflow.com/a/60832686/8222178
 
-struct DropTab: View {
+struct ImportView: View {
 	@State var transactions: [Transaction] = []
 	@State var files: [File] = []
 	@State private var dragOver = false
 
 	var body: some View {
-		HStack {
-			Spacer()
+		ZStack {
 			List(files) { file in
 				ZStack {
 					RoundedRectangle(cornerRadius: 10)
@@ -32,10 +31,12 @@ struct DropTab: View {
 				}
 				.frame(height: 60)
 			}
-			.scrollContentBackground(.hidden)
-			.frame(minWidth: 300, maxWidth: 500)
-			Spacer()
+			if files.isEmpty {
+				Text("drag files here to import")
+			}
 		}
+		.scrollContentBackground(.hidden)
+		.frame(minWidth: 300, maxWidth: 500)
 		.onDrop(of: ["public.file-url"], isTargeted: $dragOver) { providers -> Bool in
 			providers.first?.loadDataRepresentation(forTypeIdentifier: "public.file-url", completionHandler: { (data, error) in
 				guard let data = data, let path = NSString(data: data, encoding: 4), let url = URL(string: path as String), let content = try? String(contentsOf: url).split(separator: "\r\n") else {
@@ -58,7 +59,7 @@ struct DropTab: View {
 			})
 			return true
 		}
-//			.border(dragOver ? Color.red : Color.clear)
+//			.border(dragOver ? Color.red : Color.clear) // TODO react to dragover changing
 	}
 	
 	func blinkBorder(of file: File) {

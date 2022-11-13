@@ -15,6 +15,7 @@ struct ledgerApp: App {
         WindowGroup {
             ContentView()
 				.ignoresSafeArea()
+				.frame(maxWidth: .infinity, maxHeight: .infinity)
 				.background(.black)
 		}
     }
