@@ -49,6 +49,10 @@ struct ImportView: View {
 					blinkBorder(of: file)
 					return
 				}
+				let format = CSVFormat(from: content.first ?? "")
+				if let needsSorting = format.needsSorting {
+					// TODO pull up a window asking user to sort all the things using format sorter views
+				}
 				for line in content.dropFirst() {
 					if let transaction = Transaction(from: line) {
 						self.transactions.append(transaction)
@@ -64,6 +68,51 @@ struct ImportView: View {
 	
 	func blinkBorder(of file: File) {
 		// TODO blink the border of the given file on and off to indicate that it's a repeat
+	}
+}
+
+struct FormatSorter: View {
+	let components: [String]
+	let close: () -> Void
+	@State var current: Int = 0
+	
+	var body: some View {
+		HStack(spacing: 0) {
+			Spacer()
+			Text(components[current])
+			Spacer()
+			VStack {
+				SortButton(type: .date, newText: components[current])
+				SortButton(type: .merchant, newText: components[current])
+				SortButton(type: .amount, newText: components[current])
+				SortButton(type: .description, newText: components[current])
+			}
+			VStack {
+				SortButton(type: .ref, newText: components[current])
+				SortButton(type: .fees, newText: components[current])
+				SortButton(type: .category, newText: components[current])
+				SortButton(type: .transactionType, newText: components[current])
+				SortButton(type: .purchasedBy, newText: components[current])
+				SortButton(type: .notes, newText: components[current])
+			}
+		}
+	}
+	
+	struct SortButton: View {
+		let type: Key
+		let newText: String
+		@State var underline: Bool = false
+		
+		var body: some View {
+			Text(type.rawValue)
+				.underline(underline)
+				.onTapGesture {
+					CSVFormat.store(newText, as: type)
+				}
+				.onHover { hovering in
+					underline = hovering
+				}
+		}
 	}
 }
 

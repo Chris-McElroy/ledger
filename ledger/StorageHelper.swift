@@ -8,7 +8,25 @@
 import Foundation
 
 enum Key: String {
-	case transactions, files
+	case transactions
+	case files
+	case date = "date"
+	case clearingDate = "clearing date"
+	case ref = "reference"
+	case merchant = "merchant"
+	case description = "description"
+	case address = "address"
+	case amount = "amount"
+	case fees = "fees"
+	case category = "category"
+	case transactionType = "transaction type"
+	case purchasedBy = "purchased by"
+	case notes = "notes"
+//	case currency = "currency"
+//	case exchangeFrom = "exchange from"
+//	case exchangeTo = "exchange to"
+//	case exchangeRate = "exchange rate"
+//	case cardUsed = "card used"
 }
 
 class Storage {

@@ -11,15 +11,15 @@ let dateFormatter = DateFormatter()
 
 struct Transaction {
 	let date: Date
-	let clearingDate: Date?
-	let ref: String?
+	let clearingDate: Date? // description
+	let ref: String? // description
 	let merchant: String
 	let description: String?
-	let address: String
+	let address: String // description
 	let amount: Int
-	let currency: String?
-	let fees: Int?
-	let category: String?
+	let currency: String? // exchange shit i'm not going to worry about yet
+	let fees: Int? // amount
+	let category: String? // description
 	let transactionType: String?
 	let purchasedBy: String?
 	let notes: String?
@@ -53,7 +53,7 @@ struct Transaction {
 	}
 }
 
-struct Format {
+struct CSVFormat {
 	let date: Int
 	let clearingDate: Int?
 	let ref: Int?
@@ -73,4 +73,12 @@ struct Format {
 	// so now i need to make a preferences??
 	// interesting
 	// maybe i should do that later?
+	
+	// TODO make an init that splits it all out by line
+	
+	static func store(_ newText: String, as type: Key) {
+		var oldMatches = Storage.array(type) ?? []
+		oldMatches.append(newText)
+		Storage.set(oldMatches, for: type)
+	}
 }
