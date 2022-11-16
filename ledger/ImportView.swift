@@ -13,6 +13,8 @@ struct ImportView: View {
 	@State var transactions: [Transaction] = []
 	@State var files: [File] = []
 	@State private var dragOver = false
+	@State var toSort: [(String, (Key) -> Void)] = []
+	@State var format: CSVFormat? = nil
 
 	var body: some View {
 		ZStack {
@@ -34,6 +36,12 @@ struct ImportView: View {
 			if files.isEmpty {
 				Text("drag files here to import")
 			}
+			if let (item, sorter) = toSort.first {
+				FormatSorter(item: item) { key in
+					sorter(key)
+					toSort.removeFirst()
+				}
+			}
 		}
 		.scrollContentBackground(.hidden)
 		.frame(minWidth: 300, maxWidth: 500)
@@ -49,12 +57,11 @@ struct ImportView: View {
 					blinkBorder(of: file)
 					return
 				}
-				let format = CSVFormat(from: content.first ?? "")
-				if let needsSorting = format.needsSorting {
-					// TODO pull up a window asking user to sort all the things using format sorter views
+				let format = CSVFormat(from: content.first ?? "") { item, sorter in
+					toSort.append((item, sorter))
 				}
 				for line in content.dropFirst() {
-					if let transaction = Transaction(from: line) {
+					if let transaction = Transaction(from: line, format: format) {
 						self.transactions.append(transaction)
 						file.add(transaction)
 					}
@@ -72,42 +79,42 @@ struct ImportView: View {
 }
 
 struct FormatSorter: View {
-	let components: [String]
-	let close: () -> Void
-	@State var current: Int = 0
+	let item: String
+	let sort: (Key) -> Void
 	
 	var body: some View {
 		HStack(spacing: 0) {
 			Spacer()
-			Text(components[current])
+			Text(item)
 			Spacer()
 			VStack {
-				SortButton(type: .date, newText: components[current])
-				SortButton(type: .merchant, newText: components[current])
-				SortButton(type: .amount, newText: components[current])
-				SortButton(type: .description, newText: components[current])
+				SortButton(type: .date, sort: sort)
+				SortButton(type: .merchant, sort: sort)
+				SortButton(type: .amount, sort: sort)
+				SortButton(type: .description, sort: sort)
 			}
 			VStack {
-				SortButton(type: .ref, newText: components[current])
-				SortButton(type: .fees, newText: components[current])
-				SortButton(type: .category, newText: components[current])
-				SortButton(type: .transactionType, newText: components[current])
-				SortButton(type: .purchasedBy, newText: components[current])
-				SortButton(type: .notes, newText: components[current])
+				SortButton(type: .ref, sort: sort)
+				SortButton(type: .fees, sort: sort)
+				SortButton(type: .address, sort: sort)
+				SortButton(type: .category, sort: sort)
+				SortButton(type: .transactionType, sort: sort)
+				SortButton(type: .purchasedBy, sort: sort)
+				SortButton(type: .notes, sort: sort)
 			}
 		}
 	}
 	
 	struct SortButton: View {
 		let type: Key
-		let newText: String
+		let sort: (Key) -> Void
 		@State var underline: Bool = false
 		
 		var body: some View {
 			Text(type.rawValue)
 				.underline(underline)
 				.onTapGesture {
-					CSVFormat.store(newText, as: type)
+					sort(type)
 				}
 				.onHover { hovering in
 					underline = hovering

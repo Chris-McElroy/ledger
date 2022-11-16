@@ -10,6 +10,7 @@ import Foundation
 enum Key: String {
 	case transactions
 	case files
+	case labelMapping
 	case date = "date"
 	case clearingDate = "clearing date"
 	case ref = "reference"
