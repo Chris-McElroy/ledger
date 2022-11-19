@@ -37,6 +37,7 @@ struct Transaction {
 	var total: Int { amount + (fees ?? 0) }
 	
 	init?(from line: Substring, format: CSVFormat) {
+		// TOOD only remove the commas that are outside quotations
 		let items = line.split(separator: ",").map { item in
 			var item = item
 			if item.first == "\"" {
@@ -73,6 +74,7 @@ struct Transaction {
 			return nil
 		}
 		guard let newAmount = CSVFormat.getPrice(from: items[amountIndex]) else {
+			print("failed line", line, items)
 			return nil
 		}
 		amount = newAmount
@@ -130,19 +132,24 @@ class CSVFormat {
 	static var globalMapping = Storage.dictionary(.labelMapping) as? [String: String] ?? [:]
 	
 	var keyMap: [Key: [Int]] = [:]
+	var prepared: Bool = false
 	
-	init(from line: Substring, sort: (String, @escaping (Key) -> Void) -> Void) {
-		for (i, label) in line.split(separator: ",").map({ String($0) }).enumerated() {
+	init(from line: Substring, sort: (String, CSVFormat, @escaping (Key) -> Void) -> Void) {
+		let labels = line.split(separator: ",").map { String($0) }
+		print("making format", line, labels)
+		for (i, label) in labels.enumerated() {
 			if let key = Key(rawValue: CSVFormat.globalMapping[label] ?? "") {
 				keyMap[key] = (keyMap[key] ?? []) + [i]
 			} else {
-				sort(label) { key in
+				sort(label, self) { key in
 					CSVFormat.globalMapping[label] = key.rawValue
 					Storage.set(CSVFormat.globalMapping, for: .labelMapping)
 					self.keyMap[key] = (self.keyMap[key] ?? []) + [i]
+					self.prepared = self.keyMap.count == labels.count
 				}
 			}
 		}
+		prepared = keyMap.count == labels.count
 	}
 	
 	static func getPrice(from item: String) -> Int? {

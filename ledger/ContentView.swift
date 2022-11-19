@@ -12,7 +12,7 @@ enum Tab: Int {
 }
 
 struct ContentView: View {
-	@State var currentTab: Tab = .summary
+	@State var currentTab: Tab = .importing
 	
     var body: some View {
 		VStack(spacing: 0) {

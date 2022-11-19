@@ -15,6 +15,7 @@ struct ImportView: View {
 	@State private var dragOver = false
 	@State var toSort: [(String, (Key) -> Void)] = []
 	@State var format: CSVFormat? = nil
+	@State var editingMap: Bool = false
 
 	var body: some View {
 		ZStack {
@@ -36,6 +37,34 @@ struct ImportView: View {
 			if files.isEmpty {
 				Text("drag files here to import")
 			}
+			if editingMap {
+				ScrollView {
+					LazyVStack(spacing: 10) {
+						ForEach(0..<(CSVFormat.globalMapping.count), id: \.self) { i in
+							let name = CSVFormat.globalMapping.keys.sorted()[i]
+							let category = CSVFormat.globalMapping[name] ?? "none"
+							HStack {
+								Text(name + " -> " + category + " ")
+								Text("X")
+									.onTapGesture {
+										CSVFormat.globalMapping[name] = nil
+										Storage.set(CSVFormat.globalMapping, for: .labelMapping)
+										editingMap = false
+										editingMap = true
+									}
+							}
+						}
+					}
+				}
+			}
+			VStack {
+				Spacer()
+				Text(editingMap ? "stop editing" : "edit categories")
+					.onTapGesture {
+						editingMap.toggle()
+					}
+					.padding(.all, 10)
+			}
 			if let (item, sorter) = toSort.first {
 				FormatSorter(item: item) { key in
 					sorter(key)
@@ -47,7 +76,7 @@ struct ImportView: View {
 		.frame(minWidth: 300, maxWidth: 500)
 		.onDrop(of: ["public.file-url"], isTargeted: $dragOver) { providers -> Bool in
 			providers.first?.loadDataRepresentation(forTypeIdentifier: "public.file-url", completionHandler: { (data, error) in
-				guard let data = data, let path = NSString(data: data, encoding: 4), let url = URL(string: path as String), let content = try? String(contentsOf: url).split(separator: "\r\n") else {
+				guard let data = data, let path = NSString(data: data, encoding: 4), let url = URL(string: path as String), let content = try? String(contentsOf: url).split(whereSeparator: { $0 == "\n" || $0 == "\r\n" }) else {
 					print("failed to import")
 					return
 				}
@@ -57,20 +86,30 @@ struct ImportView: View {
 					blinkBorder(of: file)
 					return
 				}
-				let format = CSVFormat(from: content.first ?? "") { item, sorter in
+				let format = CSVFormat(from: content.first ?? "") { item, format, sorter in
 					toSort.append((item, sorter))
-				}
-				for line in content.dropFirst() {
-					if let transaction = Transaction(from: line, format: format) {
-						self.transactions.append(transaction)
-						file.add(transaction)
+					if format.prepared {
+						sortTransactions(from: content, file: file, format: format)
 					}
 				}
-				files.append(file)
+				if format.prepared {
+					sortTransactions(from: content, file: file, format: format)
+				}
 			})
 			return true
 		}
 //			.border(dragOver ? Color.red : Color.clear) // TODO react to dragover changing
+	}
+	
+	func sortTransactions(from content: [Substring], file: File, format: CSVFormat) {
+		var file = file
+		for line in content.dropFirst() {
+			if let transaction = Transaction(from: line, format: format) {
+				self.transactions.append(transaction)
+				file.add(transaction)
+			}
+		}
+		files.append(file)
 	}
 	
 	func blinkBorder(of file: File) {
@@ -95,6 +134,7 @@ struct FormatSorter: View {
 			}
 			VStack {
 				SortButton(type: .ref, sort: sort)
+				SortButton(type: .clearingDate, sort: sort)
 				SortButton(type: .fees, sort: sort)
 				SortButton(type: .address, sort: sort)
 				SortButton(type: .category, sort: sort)
