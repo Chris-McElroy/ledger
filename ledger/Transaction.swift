@@ -9,7 +9,15 @@ import Foundation
 
 let dateFormatter = DateFormatter()
 
-struct Transaction {
+enum MyCategory: String {
+	case income, school, goods, groceries
+}
+
+struct Transaction: Identifiable {
+	let id: Int
+	let file: String
+	var myCategory: MyCategory? = nil
+	
 	// required
 	let date: Date
 	let amount: Int
@@ -36,7 +44,10 @@ struct Transaction {
 	
 	var total: Int { amount + (fees ?? 0) }
 	
-	init?(from line: Substring, format: CSVFormat) {
+	init?(from line: Substring, file: String, format: CSVFormat) {
+		id = Storage.getUniqueID()
+		self.file = file
+		
 		var items: [String] = [""]
 		var outsideQuotes = true
 		for c in line {
@@ -138,6 +149,67 @@ struct Transaction {
 		exchangeTo = nil
 		exchangeRate = nil
 		cardUsed = nil
+	}
+	
+	init?(data: Any) {
+		guard let dict = data as? [String: Any] else { return nil }
+		
+		guard let id = dict[Key.id.rawValue] as? Int else { return nil }
+		guard let file = dict[Key.file.rawValue] as? String else { return nil }
+		guard let date = dict[Key.date.rawValue] as? Double else { return nil }
+		guard let amount = dict[Key.amount.rawValue] as? Int else { return nil }
+		guard let merchant = dict[Key.amount.rawValue] as? String else { return nil }
+		self.id = id
+		self.file = file
+		self.date = Date(timeIntervalSinceReferenceDate: date)
+		self.amount = amount
+		self.merchant = merchant
+		
+		if let myCategory = dict[Key.myCategory.rawValue] as? String {
+			self.myCategory = MyCategory(rawValue: myCategory)
+		} else { self.myCategory = nil }
+		ref = dict[Key.ref.rawValue] as? String
+		description = dict[Key.ref.rawValue] as? String
+		notes = dict[Key.ref.rawValue] as? String
+		if let clearingDate = dict[Key.clearingDate.rawValue] as? Double {
+			self.clearingDate = Date(timeIntervalSinceReferenceDate: clearingDate)
+		} else { self.clearingDate = nil }
+		address = dict[Key.ref.rawValue] as? String
+		fees = dict[Key.ref.rawValue] as? Int
+		category = dict[Key.ref.rawValue] as? String
+		transactionType = dict[Key.ref.rawValue] as? String
+		purchasedBy = dict[Key.ref.rawValue] as? String
+		currency = dict[Key.ref.rawValue] as? String
+		exchangeFrom = dict[Key.ref.rawValue] as? String
+		exchangeTo = dict[Key.ref.rawValue] as? String
+		exchangeRate = dict[Key.ref.rawValue] as? String
+		cardUsed = dict[Key.ref.rawValue] as? String
+	}
+	
+	func toDict() -> [String: Any] {
+		var dict: [String: Any] = [:]
+		dict[Key.id.rawValue] = id
+		dict[Key.file.rawValue] = file
+		dict[Key.myCategory.rawValue] = myCategory?.rawValue
+		dict[Key.date.rawValue] = date.timeIntervalSinceReferenceDate
+		dict[Key.amount.rawValue] = amount
+		dict[Key.merchant.rawValue] = merchant
+		dict[Key.ref.rawValue] = ref
+		dict[Key.description.rawValue] = description
+		dict[Key.notes.rawValue] = notes
+		dict[Key.clearingDate.rawValue] = clearingDate?.timeIntervalSinceReferenceDate
+		dict[Key.address.rawValue] = address
+		dict[Key.fees.rawValue] = fees
+		dict[Key.category.rawValue] = category
+		dict[Key.transactionType.rawValue] = transactionType
+		dict[Key.purchasedBy.rawValue] = purchasedBy
+		dict[Key.currency.rawValue] = currency
+		dict[Key.exchangeFrom.rawValue] = exchangeFrom
+		dict[Key.exchangeTo.rawValue] = exchangeTo
+		dict[Key.exchangeRate.rawValue] = exchangeRate
+		dict[Key.cardUsed.rawValue] = cardUsed
+		
+		return dict
 	}
 }
 

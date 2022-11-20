@@ -10,8 +10,7 @@ import SwiftUI
 // drag and drop from https://stackoverflow.com/a/60832686/8222178
 
 struct ImportView: View {
-	@State var transactions: [Transaction] = []
-	@State var files: [File] = []
+	@ObservedObject var storage: Storage = Storage.main
 	@State var blinkBorder: String? = nil
 	@State private var dragOver = false
 	@State var toSort: [(String, (Key) -> Void)] = []
@@ -20,7 +19,7 @@ struct ImportView: View {
 
 	var body: some View {
 		ZStack {
-			List(files) { file in
+			List(storage.files) { file in
 				ZStack {
 					RoundedRectangle(cornerRadius: 10)
 						.stroke(file.id != blinkBorder ? Color.white : Color.clear, lineWidth: 2)
@@ -33,9 +32,10 @@ struct ImportView: View {
 						}
 					}
 				}
+				.opacity(file.sorted ? 0.25 : 1)
 				.frame(height: 60)
 			}
-			if files.isEmpty {
+			if storage.files.isEmpty {
 				Text("drag files here to import")
 			}
 			if editingMap {
@@ -82,8 +82,8 @@ struct ImportView: View {
 					print("failed to import")
 					return
 				}
-				var file = File(from: url.lastPathComponent)
-				if files.contains(file) {
+				let file = File(from: url.lastPathComponent)
+				if storage.files.contains(file) {
 					print("same name")
 					blinkBorder(of: file)
 					return
@@ -108,12 +108,14 @@ struct ImportView: View {
 	func sortTransactions(from content: [Substring], file: File, format: CSVFormat) {
 		var file = file
 		for line in content.dropFirst() {
-			if let transaction = Transaction(from: line, format: format) {
-				self.transactions.append(transaction)
+			if let transaction = Transaction(from: line, file: file.id, format: format) {
+				self.storage.transactions[transaction.id] = transaction
+				Storage.set(self.storage.transactions.map { $0.value.toDict() }, for: .transactions)
 				file.add(transaction)
 			}
 		}
-		files.append(file)
+		storage.files.append(file)
+		Storage.set(storage.files.map { $0.toDict() }, for: .files)
 	}
 	
 	func blinkBorder(of file: File) {
@@ -189,11 +191,31 @@ struct FormatSorter: View {
 struct File: Identifiable, Equatable {
 	let id: String
 	var count: Int = 0
+	var allTransactions: [Int] = []
+	var sortedTransactions: [Int] = []
 	var earliestDate: Date? = nil
 	var latestDate: Date? = nil
 	
+	var sorted: Bool { allTransactions.count == sortedTransactions.count }
+	
 	init(from path: String) {
 		id = path
+	}
+	
+	init?(data: Any) {
+		guard let dict = data as? [String: Any] else { return nil }
+		guard let id = dict[Key.id.rawValue] as? String else { return nil }
+		guard let count = dict[Key.count.rawValue] as? Int else { return nil }
+		guard let allTransactions = dict[Key.allTransactions.rawValue] as? [Int] else { return nil }
+		guard let sortedTransactions = dict[Key.sortedTransactions.rawValue] as? [Int] else { return nil }
+		guard let earliestDate = dict[Key.earliestDate.rawValue] as? Double else { return nil }
+		guard let latestDate = dict[Key.latestDate.rawValue] as? Double else { return nil }
+		self.id = id
+		self.count = count
+		self.allTransactions = allTransactions
+		self.sortedTransactions = sortedTransactions
+		self.earliestDate = Date(timeIntervalSinceReferenceDate: earliestDate)
+		self.latestDate = Date(timeIntervalSinceReferenceDate: latestDate)
 	}
 	
 	static func == (lhs: File, rhs: File) -> Bool {
@@ -202,6 +224,7 @@ struct File: Identifiable, Equatable {
 	
 	mutating func add(_ transaction: Transaction) {
 		count += 1
+		allTransactions.append(transaction.id)
 		if transaction.date < earliestDate ?? Date.distantFuture {
 			self.earliestDate = transaction.date
 		}
@@ -209,4 +232,17 @@ struct File: Identifiable, Equatable {
 			self.latestDate = transaction.date
 		}
 	}
+	
+	func toDict() -> [String: Any] {
+		var dict: [String: Any] = [:]
+		dict[Key.id.rawValue] = id
+		dict[Key.count.rawValue] = count
+		dict[Key.allTransactions.rawValue] = allTransactions
+		dict[Key.sortedTransactions.rawValue] = sortedTransactions
+		dict[Key.earliestDate.rawValue] = earliestDate?.timeIntervalSinceReferenceDate
+		dict[Key.latestDate.rawValue] = latestDate?.timeIntervalSinceReferenceDate
+		
+		return dict
+	}
 }
+
