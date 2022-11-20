@@ -12,6 +12,7 @@ import SwiftUI
 struct ImportView: View {
 	@State var transactions: [Transaction] = []
 	@State var files: [File] = []
+	@State var blinkBorder: String? = nil
 	@State private var dragOver = false
 	@State var toSort: [(String, (Key) -> Void)] = []
 	@State var format: CSVFormat? = nil
@@ -22,7 +23,7 @@ struct ImportView: View {
 			List(files) { file in
 				ZStack {
 					RoundedRectangle(cornerRadius: 10)
-						.stroke(Color.white, lineWidth: 2)
+						.stroke(file.id != blinkBorder ? Color.white : Color.clear, lineWidth: 2)
 						.foregroundColor(.black)
 					VStack {
 						Text(file.id)
@@ -56,6 +57,7 @@ struct ImportView: View {
 						}
 					}
 				}
+				.background(.black)
 			}
 			VStack {
 				Spacer()
@@ -80,17 +82,19 @@ struct ImportView: View {
 					print("failed to import")
 					return
 				}
-				var file = File(id: url.lastPathComponent)
+				var file = File(from: url.lastPathComponent)
 				if files.contains(file) {
 					print("same name")
 					blinkBorder(of: file)
 					return
 				}
 				let format = CSVFormat(from: content.first ?? "") { item, format, sorter in
-					toSort.append((item, sorter))
-					if format.prepared {
-						sortTransactions(from: content, file: file, format: format)
-					}
+					toSort.append((item, { key in
+						sorter(key)
+						if format.prepared {
+							sortTransactions(from: content, file: file, format: format)
+						}
+					}))
 				}
 				if format.prepared {
 					sortTransactions(from: content, file: file, format: format)
@@ -113,7 +117,23 @@ struct ImportView: View {
 	}
 	
 	func blinkBorder(of file: File) {
-		// TODO blink the border of the given file on and off to indicate that it's a repeat
+		blinkBorder = file.id
+		var count = 0
+		print("setting up")
+		DispatchQueue.main.async {
+			Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true, block: { timer in
+				if blinkBorder != nil {
+					blinkBorder = nil
+				} else {
+					blinkBorder = file.id
+				}
+				count += 1
+				print("blinking")
+				if count > 3 && blinkBorder == nil {
+					timer.invalidate()
+				}
+			})
+		}
 	}
 }
 
@@ -132,6 +152,7 @@ struct FormatSorter: View {
 				SortButton(type: .amount, sort: sort)
 				SortButton(type: .description, sort: sort)
 			}
+			Spacer().frame(width: 20)
 			VStack {
 				SortButton(type: .ref, sort: sort)
 				SortButton(type: .clearingDate, sort: sort)
@@ -143,6 +164,8 @@ struct FormatSorter: View {
 				SortButton(type: .notes, sort: sort)
 			}
 		}
+		.padding(.all, 20)
+		.background(.black)
 	}
 	
 	struct SortButton: View {
@@ -168,6 +191,10 @@ struct File: Identifiable, Equatable {
 	var count: Int = 0
 	var earliestDate: Date? = nil
 	var latestDate: Date? = nil
+	
+	init(from path: String) {
+		id = path
+	}
 	
 	static func == (lhs: File, rhs: File) -> Bool {
 		lhs.id == rhs.id

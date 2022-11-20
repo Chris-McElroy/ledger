@@ -37,16 +37,29 @@ struct Transaction {
 	var total: Int { amount + (fees ?? 0) }
 	
 	init?(from line: Substring, format: CSVFormat) {
-		// TOOD only remove the commas that are outside quotations
-		let items = line.split(separator: ",").map { item in
-			var item = item
-			if item.first == "\"" {
-				item.removeFirst()
+		var items: [String] = [""]
+		var outsideQuotes = true
+		for c in line {
+			if c == "," && outsideQuotes {
+				items.append("")
+			} else if c == "\"" {
+				if items.last == "" {
+					outsideQuotes.toggle()
+				} else if !outsideQuotes {
+					outsideQuotes = true
+				} else {
+					print("problem with quotes", line, items)
+				}
+			} else {
+				items[items.count - 1].append(c)
 			}
-			if item.last == "\"" {
-				item.removeLast()
-			}
-			return String(item)
+		}
+		
+		if items.count != format.keyMap.values.joined().count {
+			print("error — items don't line up")
+			print(line)
+			print(items)
+			return nil
 		}
 		
 		dateFormatter.dateFormat = "MM/dd/yyyy"
