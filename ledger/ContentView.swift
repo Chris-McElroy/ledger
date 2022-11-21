@@ -34,7 +34,7 @@ struct ContentView: View {
 			} else if currentTab == .summary {
 				Spacer()
 			} else {
-				Spacer()
+				LedgerView()
 			}
 		}
     }

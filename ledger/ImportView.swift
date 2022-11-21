@@ -76,11 +76,19 @@ struct ImportView: View {
 		}
 		.scrollContentBackground(.hidden)
 		.frame(minWidth: 300, maxWidth: 500)
+		.onAppear {
+			Storage.set(nil, for: .transactions)
+			Storage.set(nil, for: .files)
+		}
 		.onDrop(of: ["public.file-url"], isTargeted: $dragOver) { providers -> Bool in
 			providers.first?.loadDataRepresentation(forTypeIdentifier: "public.file-url", completionHandler: { (data, error) in
-				guard let data = data, let path = NSString(data: data, encoding: 4), let url = URL(string: path as String), let content = try? String(contentsOf: url).split(whereSeparator: { $0 == "\n" || $0 == "\r\n" }) else {
+				guard let data = data, let path = NSString(data: data, encoding: 4), let url = URL(string: path as String), var content = try? String(contentsOf: url).split(omittingEmptySubsequences: false, whereSeparator: { $0 == "\n" || $0 == "\r\n" }) else {
 					print("failed to import")
 					return
+				}
+				if content.last == "" { content.removeLast() }
+				if let blankIndex = content.firstIndex(of: "") {
+					content.removeFirst(blankIndex + 1)
 				}
 				let file = File(from: url.lastPathComponent)
 				if storage.files.contains(file) {
@@ -109,19 +117,22 @@ struct ImportView: View {
 		var file = file
 		for line in content.dropFirst() {
 			if let transaction = Transaction(from: line, file: file.id, format: format) {
-				self.storage.transactions[transaction.id] = transaction
-				Storage.set(self.storage.transactions.map { $0.value.toDict() }, for: .transactions)
+				DispatchQueue.main.async {
+					self.storage.transactions[transaction.id] = transaction
+					Storage.set(self.storage.transactions.map { $0.value.toDict() }, for: .transactions)
+				}
 				file.add(transaction)
 			}
 		}
-		storage.files.append(file)
-		Storage.set(storage.files.map { $0.toDict() }, for: .files)
+		DispatchQueue.main.async {
+			storage.files.append(file)
+			Storage.set(storage.files.map { $0.toDict() }, for: .files)
+		}
 	}
 	
 	func blinkBorder(of file: File) {
 		blinkBorder = file.id
 		var count = 0
-		print("setting up")
 		DispatchQueue.main.async {
 			Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true, block: { timer in
 				if blinkBorder != nil {
@@ -130,7 +141,6 @@ struct ImportView: View {
 					blinkBorder = file.id
 				}
 				count += 1
-				print("blinking")
 				if count > 3 && blinkBorder == nil {
 					timer.invalidate()
 				}

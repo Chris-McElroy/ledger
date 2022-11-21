@@ -21,9 +21,9 @@ struct Transaction: Identifiable {
 	// required
 	let date: Date
 	let amount: Int
-	let merchant: String // appendable
 
 	// not required
+	let merchant: String? // appendable
 	let ref: String? // appendable
 	let description: String? // appendable
 	let notes: String? // appendable
@@ -98,7 +98,7 @@ struct Transaction: Identifiable {
 			return nil
 		}
 		guard let newAmount = CSVFormat.getPrice(from: items[amountIndex]) else {
-			print("failed line", line, items)
+			print("error — invalid amount", items[amountIndex], format.keyMap[.amount])
 			return nil
 		}
 		amount = newAmount
@@ -110,11 +110,9 @@ struct Transaction: Identifiable {
 			fees = newFees
 		} else { fees = nil }
 		
-		guard let merchantIndicies = format.keyMap[.merchant] else {
-			print("error — no merchant")
-			return nil
-		}
-		merchant = String(merchantIndicies.map({ items[$0] }).joined(separator: "\n"))
+		if let merchantIndicies = format.keyMap[.merchant] {
+			merchant = String(merchantIndicies.map({ items[$0] }).joined(separator: "\n"))
+		} else { merchant = nil }
 		
 		if let refIndicies = format.keyMap[.ref] {
 			ref = String(refIndicies.map({ items[$0] }).joined(separator: "\n"))
@@ -221,7 +219,6 @@ class CSVFormat {
 	
 	init(from line: Substring, sort: (String, CSVFormat, @escaping (Key) -> Void) -> Void) {
 		let labels = line.split(separator: ",").map { String($0) }
-		print("making format", line, labels)
 		for (i, label) in labels.enumerated() {
 			if let key = Key(rawValue: CSVFormat.globalMapping[label] ?? "") {
 				keyMap[key] = (keyMap[key] ?? []) + [i]
@@ -234,7 +231,7 @@ class CSVFormat {
 				}
 			}
 		}
-		prepared = keyMap.count == labels.count
+		prepared = keyMap.values.joined().count == labels.count
 	}
 	
 	static func getPrice(from item: String) -> Int? {
@@ -242,7 +239,7 @@ class CSVFormat {
 			print("error — . not in correct place", item)
 			return nil
 		}
-		guard let price = Int(item.filter({ $0 != "." })) else {
+		guard let price = Int(item.filter({ $0 != "." && $0 != "," })) else {
 			print("error — invalid amount", item)
 			return nil
 		}
