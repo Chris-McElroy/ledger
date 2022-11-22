@@ -30,7 +30,7 @@ struct ContentView: View {
 			if currentTab == .importing {
 				ImportView()
 			} else if currentTab == .sort {
-				Spacer()
+				SortView()
 			} else if currentTab == .summary {
 				Spacer()
 			} else {

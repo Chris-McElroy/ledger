@@ -17,6 +17,7 @@
 		1E762DD92916A1EC00FA385D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1E762DD82916A1EC00FA385D /* Assets.xcassets */; };
 		1E762DDC2916A1EC00FA385D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1E762DDB2916A1EC00FA385D /* Preview Assets.xcassets */; };
 		1EC63B1B292B717B00DC8371 /* LedgerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC63B1A292B717B00DC8371 /* LedgerView.swift */; };
+		1EF68012292CC16700598191 /* SortView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF68011292CC16700598191 /* SortView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +32,7 @@
 		1E762DDB2916A1EC00FA385D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		1E762DDD2916A1EC00FA385D /* ledger.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ledger.entitlements; sourceTree = "<group>"; };
 		1EC63B1A292B717B00DC8371 /* LedgerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerView.swift; sourceTree = "<group>"; };
+		1EF68011292CC16700598191 /* SortView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,7 @@
 				1E3F2252291C3B1F0000EC93 /* KeyInput.swift */,
 				1E076282291A42FA00FF58D8 /* ImportView.swift */,
 				1EC63B1A292B717B00DC8371 /* LedgerView.swift */,
+				1EF68011292CC16700598191 /* SortView.swift */,
 				1E076284291A47AC00FF58D8 /* Transaction.swift */,
 				1E3F2250291C39D70000EC93 /* StorageHelper.swift */,
 				1E762DD82916A1EC00FA385D /* Assets.xcassets */,
@@ -166,6 +169,7 @@
 				1E762DD72916A1EB00FA385D /* ContentView.swift in Sources */,
 				1E076283291A42FA00FF58D8 /* ImportView.swift in Sources */,
 				1E076285291A47AC00FF58D8 /* Transaction.swift in Sources */,
+				1EF68012292CC16700598191 /* SortView.swift in Sources */,
 				1E762DD52916A1EB00FA385D /* ledgerApp.swift in Sources */,
 				1E3F2251291C39D70000EC93 /* StorageHelper.swift in Sources */,
 				1EC63B1B292B717B00DC8371 /* LedgerView.swift in Sources */,
