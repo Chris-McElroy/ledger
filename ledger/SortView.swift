@@ -18,6 +18,7 @@ struct SortView: View {
 	
 	var body: some View {
 		VStack {
+			Spacer()
 			Text("sort by")
 			HStack(spacing: 0) {
 				// TODO have these do anything
@@ -25,40 +26,59 @@ struct SortView: View {
 				Spacer().frame(width: 20)
 				Text("file")
 			}
+			Spacer()
 			if let transaction {
 				VStack {
-					Text(transaction.date)
-					Text(String(transaction.amount))
-					Text(transaction.description)
-					Text(transaction.merchant)
+					Text(transaction.date.formatted(date: .long, time: .omitted))
+					Text(priceToString(transaction.amount))
+					Text(transaction.description ?? "")
+					Text(transaction.ref ?? "")
+					Text(transaction.notes ?? "")
+					Text(transaction.merchant ?? "")
 				}
+				Spacer()
 				HStack {
 					VStack {
-						SortButton(type: .date, sort: sort)
-						SortButton(type: .merchant, sort: sort)
-						SortButton(type: .amount, sort: sort)
-						SortButton(type: .description, sort: sort)
+						SortButton(type: .sweeps, sort: sort)
+						SortButton(type: .income, sort: sort)
 					}
 					VStack {
-						SortButton(type: .ref, sort: sort)
-						SortButton(type: .clearingDate, sort: sort)
-						SortButton(type: .fees, sort: sort)
-						SortButton(type: .address, sort: sort)
-						SortButton(type: .category, sort: sort)
-						SortButton(type: .transactionType, sort: sort)
-						SortButton(type: .purchasedBy, sort: sort)
-						SortButton(type: .notes, sort: sort)
+						SortButton(type: .utilities, sort: sort)
+						SortButton(type: .medical, sort: sort)
+						SortButton(type: .groceries, sort: sort)
+						SortButton(type: .car, sort: sort)
+						SortButton(type: .haircut, sort: sort)
+						SortButton(type: .software, sort: sort)
+					}
+					VStack {
+						SortButton(type: .goods, sort: sort)
+						SortButton(type: .dining, sort: sort)
+						SortButton(type: .exercise, sort: sort)
+						SortButton(type: .vacation, sort: sort)
+						SortButton(type: .gifts, sort: sort)
+						SortButton(type: .games, sort: sort)
+						SortButton(type: .school, sort: sort)
+					}
+					VStack {
+						SortButton(type: .climate, sort: sort)
+						SortButton(type: .politics, sort: sort)
+						SortButton(type: .patreon, sort: sort)
 					}
 				}
 			} else {
 				Spacer()
 			}
-			.padding(.all, 20)
-			.background(.black)
 		}
+		.padding(.all, 20)
+		.background(.black)
 		.onAppear {
 			transaction = storage.transactions.sorted(by: { $0.value.date < $1.value.date }).first?.value
+			print("trans", transaction?.description)
 		}
+	}
+	
+	func sort(into category: MyCategory) {
+		transaction?.myCategory = category
 	}
 	
 	struct SortButton: View {

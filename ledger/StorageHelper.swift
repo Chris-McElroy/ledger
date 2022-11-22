@@ -38,11 +38,14 @@ class Storage: ObservableObject {
 	@Published var files: [File] = (Storage.array(.files)?.compactMap { File(data: $0) } ?? []).sorted(by: { a, _ in !a.sorted })
 	
 	static func getTransactions() -> [Int: Transaction] {
+		print("getting transactions")
 		var newDict: [Int: Transaction] = [:]
 		let transactionsList: [Transaction] = Storage.array(.transactions)?.compactMap { Transaction(data: $0) } ?? []
+		print("list", transactionsList.count)
 		for transaction in transactionsList {
 			newDict[transaction.id] = transaction
 		}
+		print("output", newDict.count)
 		return newDict
 	}
 	

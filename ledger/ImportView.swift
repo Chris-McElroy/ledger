@@ -76,10 +76,6 @@ struct ImportView: View {
 		}
 		.scrollContentBackground(.hidden)
 		.frame(minWidth: 300, maxWidth: 500)
-		.onAppear {
-			Storage.set(nil, for: .transactions)
-			Storage.set(nil, for: .files)
-		}
 		.onDrop(of: ["public.file-url"], isTargeted: $dragOver) { providers -> Bool in
 			providers.first?.loadDataRepresentation(forTypeIdentifier: "public.file-url", completionHandler: { (data, error) in
 				guard let data = data, let path = NSString(data: data, encoding: 4), let url = URL(string: path as String), var content = try? String(contentsOf: url).split(omittingEmptySubsequences: false, whereSeparator: { $0 == "\n" || $0 == "\r\n" }) else {

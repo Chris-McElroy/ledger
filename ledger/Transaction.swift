@@ -10,7 +10,28 @@ import Foundation
 let dateFormatter = DateFormatter()
 
 enum MyCategory: String {
-	case income, school, goods, groceries
+	// TODO this is dumb and i should make these changable
+	case sweeps = "sweeps"
+	case income = "income"
+	
+	case utilities = "rent and utilities"
+	case medical = "medical"
+	case groceries = "groceries"
+	case car = "car"
+	case haircut = "haircut"
+	case software = "software"
+	
+	case goods = "goods"
+	case dining = "dining out"
+	case exercise = "exercise"
+	case vacation = "vacation"
+	case gifts = "gifts"
+	case games = "games"
+	case school = "school"
+	
+	case climate = "climate"
+	case politics = "politics"
+	case patreon = "patreon"
 }
 
 struct Transaction: Identifiable {
@@ -119,8 +140,9 @@ struct Transaction: Identifiable {
 		} else { ref = nil }
 		
 		if let descriptionIndicies = format.keyMap[.description] {
+			print("getting desc", descriptionIndicies, descriptionIndicies.map({ items[$0] }).joined(separator: "\n"), String(descriptionIndicies.map({ items[$0] }).joined(separator: "\n")))
 			description = String(descriptionIndicies.map({ items[$0] }).joined(separator: "\n"))
-		} else { description = nil }
+		} else { print("failed to get desc"); description = nil }
 		
 		if let notesIndicies = format.keyMap[.notes] {
 			notes = String(notesIndicies.map({ items[$0] }).joined(separator: "\n"))
@@ -150,24 +172,23 @@ struct Transaction: Identifiable {
 	}
 	
 	init?(data: Any) {
-		guard let dict = data as? [String: Any] else { return nil }
+		guard let dict = data as? [String: Any] else { print("error 1"); return nil }
 		
-		guard let id = dict[Key.id.rawValue] as? Int else { return nil }
-		guard let file = dict[Key.file.rawValue] as? String else { return nil }
-		guard let date = dict[Key.date.rawValue] as? Double else { return nil }
-		guard let amount = dict[Key.amount.rawValue] as? Int else { return nil }
-		guard let merchant = dict[Key.amount.rawValue] as? String else { return nil }
+		guard let id = dict[Key.id.rawValue] as? Int else { print("error 2"); return nil }
+		guard let file = dict[Key.file.rawValue] as? String else { print("error 3"); return nil }
+		guard let date = dict[Key.date.rawValue] as? Double else { print("error 4"); return nil }
+		guard let amount = dict[Key.amount.rawValue] as? Int else { print("error 5"); return nil }
 		self.id = id
 		self.file = file
 		self.date = Date(timeIntervalSinceReferenceDate: date)
 		self.amount = amount
-		self.merchant = merchant
 		
 		if let myCategory = dict[Key.myCategory.rawValue] as? String {
 			self.myCategory = MyCategory(rawValue: myCategory)
 		} else { self.myCategory = nil }
+		merchant = dict[Key.merchant.rawValue] as? String
 		ref = dict[Key.ref.rawValue] as? String
-		description = dict[Key.ref.rawValue] as? String
+		description = dict[Key.description.rawValue] as? String
 		notes = dict[Key.ref.rawValue] as? String
 		if let clearingDate = dict[Key.clearingDate.rawValue] as? Double {
 			self.clearingDate = Date(timeIntervalSinceReferenceDate: clearingDate)
@@ -209,6 +230,10 @@ struct Transaction: Identifiable {
 		
 		return dict
 	}
+}
+
+func priceToString(_ price: Int, currency: String = "USD") -> String {
+	return (price < 0 ? "-" : "") + "$" + String(format: "%01d.%02d", abs(price)/100, abs(price) % 100)
 }
 
 class CSVFormat {

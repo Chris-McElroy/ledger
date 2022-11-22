@@ -37,6 +37,10 @@ struct ContentView: View {
 				LedgerView()
 			}
 		}
+//		.onAppear {
+//			Storage.set(nil, for: .files)
+//			Storage.set(nil, for: .transactions)
+//		}
     }
 }
 
