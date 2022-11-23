@@ -19,7 +19,7 @@ struct ImportView: View {
 
 	var body: some View {
 		ZStack {
-			List(storage.files) { file in
+			List(storage.files.values.sorted(by: { a, _ in !a.sorted })) { file in
 				ZStack {
 					RoundedRectangle(cornerRadius: 10)
 						.stroke(file.id != blinkBorder ? Color.white : Color.clear, lineWidth: 2)
@@ -87,7 +87,7 @@ struct ImportView: View {
 					content.removeFirst(blankIndex + 1)
 				}
 				let file = File(from: url.lastPathComponent)
-				if storage.files.contains(file) {
+				if storage.files[file.id] != nil {
 					print("same name")
 					blinkBorder(of: file)
 					return
@@ -121,8 +121,8 @@ struct ImportView: View {
 			}
 		}
 		DispatchQueue.main.async {
-			storage.files.append(file)
-			Storage.set(storage.files.map { $0.toDict() }, for: .files)
+			storage.files[file.id] = file
+			Storage.set(storage.files.map { $0.value.toDict() }, for: .files)
 		}
 	}
 	
@@ -193,62 +193,3 @@ struct FormatSorter: View {
 		}
 	}
 }
-
-struct File: Identifiable, Equatable {
-	let id: String
-	var count: Int = 0
-	var allTransactions: [Int] = []
-	var sortedTransactions: [Int] = []
-	var earliestDate: Date? = nil
-	var latestDate: Date? = nil
-	
-	var sorted: Bool { allTransactions.count == sortedTransactions.count }
-	
-	init(from path: String) {
-		id = path
-	}
-	
-	init?(data: Any) {
-		guard let dict = data as? [String: Any] else { return nil }
-		guard let id = dict[Key.id.rawValue] as? String else { return nil }
-		guard let count = dict[Key.count.rawValue] as? Int else { return nil }
-		guard let allTransactions = dict[Key.allTransactions.rawValue] as? [Int] else { return nil }
-		guard let sortedTransactions = dict[Key.sortedTransactions.rawValue] as? [Int] else { return nil }
-		guard let earliestDate = dict[Key.earliestDate.rawValue] as? Double else { return nil }
-		guard let latestDate = dict[Key.latestDate.rawValue] as? Double else { return nil }
-		self.id = id
-		self.count = count
-		self.allTransactions = allTransactions
-		self.sortedTransactions = sortedTransactions
-		self.earliestDate = Date(timeIntervalSinceReferenceDate: earliestDate)
-		self.latestDate = Date(timeIntervalSinceReferenceDate: latestDate)
-	}
-	
-	static func == (lhs: File, rhs: File) -> Bool {
-		lhs.id == rhs.id
-	}
-	
-	mutating func add(_ transaction: Transaction) {
-		count += 1
-		allTransactions.append(transaction.id)
-		if transaction.date < earliestDate ?? Date.distantFuture {
-			self.earliestDate = transaction.date
-		}
-		if transaction.date > latestDate ?? Date.distantPast {
-			self.latestDate = transaction.date
-		}
-	}
-	
-	func toDict() -> [String: Any] {
-		var dict: [String: Any] = [:]
-		dict[Key.id.rawValue] = id
-		dict[Key.count.rawValue] = count
-		dict[Key.allTransactions.rawValue] = allTransactions
-		dict[Key.sortedTransactions.rawValue] = sortedTransactions
-		dict[Key.earliestDate.rawValue] = earliestDate?.timeIntervalSinceReferenceDate
-		dict[Key.latestDate.rawValue] = latestDate?.timeIntervalSinceReferenceDate
-		
-		return dict
-	}
-}
-

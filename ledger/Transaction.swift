@@ -34,7 +34,7 @@ enum MyCategory: String {
 	case patreon = "patreon"
 }
 
-struct Transaction: Identifiable {
+class Transaction: Identifiable {
 	let id: Int
 	let file: String
 	var myCategory: MyCategory? = nil
@@ -119,7 +119,7 @@ struct Transaction: Identifiable {
 			return nil
 		}
 		guard let newAmount = CSVFormat.getPrice(from: items[amountIndex]) else {
-			print("error — invalid amount", items[amountIndex], format.keyMap[.amount])
+			print("error — invalid amount", items[amountIndex], format.keyMap[.amount] ?? "")
 			return nil
 		}
 		amount = newAmount
@@ -234,40 +234,4 @@ struct Transaction: Identifiable {
 
 func priceToString(_ price: Int, currency: String = "USD") -> String {
 	return (price < 0 ? "-" : "") + "$" + String(format: "%01d.%02d", abs(price)/100, abs(price) % 100)
-}
-
-class CSVFormat {
-	static var globalMapping = Storage.dictionary(.labelMapping) as? [String: String] ?? [:]
-	
-	var keyMap: [Key: [Int]] = [:]
-	var prepared: Bool = false
-	
-	init(from line: Substring, sort: (String, CSVFormat, @escaping (Key) -> Void) -> Void) {
-		let labels = line.split(separator: ",").map { String($0) }
-		for (i, label) in labels.enumerated() {
-			if let key = Key(rawValue: CSVFormat.globalMapping[label] ?? "") {
-				keyMap[key] = (keyMap[key] ?? []) + [i]
-			} else {
-				sort(label, self) { key in
-					CSVFormat.globalMapping[label] = key.rawValue
-					Storage.set(CSVFormat.globalMapping, for: .labelMapping)
-					self.keyMap[key] = (self.keyMap[key] ?? []) + [i]
-					self.prepared = self.keyMap.count == labels.count
-				}
-			}
-		}
-		prepared = keyMap.values.joined().count == labels.count
-	}
-	
-	static func getPrice(from item: String) -> Int? {
-		guard item.firstIndex(of: ".")?.utf16Offset(in: item) == item.count - 3 && item.filter({ $0 == "." }).count == 1 else {
-			print("error — . not in correct place", item)
-			return nil
-		}
-		guard let price = Int(item.filter({ $0 != "." && $0 != "," })) else {
-			print("error — invalid amount", item)
-			return nil
-		}
-		return price
-	}
 }

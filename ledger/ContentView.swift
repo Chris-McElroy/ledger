@@ -27,6 +27,7 @@ struct ContentView: View {
 			.font(.headline)
 			.padding(.all, 20)
 			.background(KeyEventHandling(tab: { self.currentTab = Tab(rawValue: self.currentTab.rawValue + 1) ?? .importing }))
+			.layoutPriority(10)
 			if currentTab == .importing {
 				ImportView()
 			} else if currentTab == .sort {
@@ -40,6 +41,8 @@ struct ContentView: View {
 //		.onAppear {
 //			Storage.set(nil, for: .files)
 //			Storage.set(nil, for: .transactions)
+//			Storage.main.files = [:]
+//			Storage.main.transactions = [:]
 //		}
     }
 }

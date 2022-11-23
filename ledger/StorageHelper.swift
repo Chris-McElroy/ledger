@@ -35,17 +35,23 @@ enum Key: String {
 class Storage: ObservableObject {
 	static let main = Storage()
 	@Published var transactions: [Int: Transaction] = getTransactions()
-	@Published var files: [File] = (Storage.array(.files)?.compactMap { File(data: $0) } ?? []).sorted(by: { a, _ in !a.sorted })
+	@Published var files: [String: File] = getFiles()
 	
 	static func getTransactions() -> [Int: Transaction] {
-		print("getting transactions")
 		var newDict: [Int: Transaction] = [:]
 		let transactionsList: [Transaction] = Storage.array(.transactions)?.compactMap { Transaction(data: $0) } ?? []
-		print("list", transactionsList.count)
 		for transaction in transactionsList {
 			newDict[transaction.id] = transaction
 		}
-		print("output", newDict.count)
+		return newDict
+	}
+	
+	static func getFiles() -> [String: File] {
+		var newDict: [String: File] = [:]
+		let fileList: [File] = Storage.array(.files)?.compactMap { File(data: $0) } ?? []
+		for file in fileList {
+			newDict[file.id] = file
+		}
 		return newDict
 	}
 	
