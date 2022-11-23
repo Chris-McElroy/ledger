@@ -33,7 +33,7 @@ struct ContentView: View {
 			} else if currentTab == .sort {
 				SortView()
 			} else if currentTab == .summary {
-				Spacer()
+				SummaryView()
 			} else {
 				LedgerView()
 			}

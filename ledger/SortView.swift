@@ -29,7 +29,7 @@ struct SortView: View {
 			if let transaction {
 				VStack {
 					Text("date: " + transaction.date.formatted(date: .long, time: .omitted))
-					Text("amount: " + priceToString(transaction.amount))
+					Text("amount: " + transaction.amount.formatted(.currency(code: "USD")))
 					if let merchant = transaction.merchant {
 						Text("merchant: " + merchant)
 					}

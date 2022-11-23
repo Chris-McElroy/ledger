@@ -20,7 +20,7 @@ struct LedgerView: View {
 					VStack {
 						Text(transaction.description ?? "")
 						HStack(spacing: 20) {
-							Text(String(transaction.amount))
+							Text(transaction.amount.formatted(.currency(code: "USD")))
 							Text(transaction.notes ?? "")
 						}
 					}

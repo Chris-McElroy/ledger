@@ -140,9 +140,8 @@ class Transaction: Identifiable {
 		} else { ref = nil }
 		
 		if let descriptionIndicies = format.keyMap[.description] {
-			print("getting desc", descriptionIndicies, descriptionIndicies.map({ items[$0] }).joined(separator: "\n"), String(descriptionIndicies.map({ items[$0] }).joined(separator: "\n")))
 			description = String(descriptionIndicies.map({ items[$0] }).joined(separator: "\n"))
-		} else { print("failed to get desc"); description = nil }
+		} else { description = nil }
 		
 		if let notesIndicies = format.keyMap[.notes] {
 			notes = String(notesIndicies.map({ items[$0] }).joined(separator: "\n"))
@@ -193,16 +192,16 @@ class Transaction: Identifiable {
 		if let clearingDate = dict[Key.clearingDate.rawValue] as? Double {
 			self.clearingDate = Date(timeIntervalSinceReferenceDate: clearingDate)
 		} else { self.clearingDate = nil }
-		address = dict[Key.ref.rawValue] as? String
-		fees = dict[Key.ref.rawValue] as? Int
-		category = dict[Key.ref.rawValue] as? String
-		transactionType = dict[Key.ref.rawValue] as? String
-		purchasedBy = dict[Key.ref.rawValue] as? String
-		currency = dict[Key.ref.rawValue] as? String
-		exchangeFrom = dict[Key.ref.rawValue] as? String
-		exchangeTo = dict[Key.ref.rawValue] as? String
-		exchangeRate = dict[Key.ref.rawValue] as? String
-		cardUsed = dict[Key.ref.rawValue] as? String
+		address = dict[Key.address.rawValue] as? String
+		fees = dict[Key.fees.rawValue] as? Int
+		category = dict[Key.category.rawValue] as? String
+		transactionType = dict[Key.transactionType.rawValue] as? String
+		purchasedBy = dict[Key.purchasedBy.rawValue] as? String
+		currency = dict[Key.currency.rawValue] as? String
+		exchangeFrom = dict[Key.exchangeFrom.rawValue] as? String
+		exchangeTo = dict[Key.exchangeTo.rawValue] as? String
+		exchangeRate = dict[Key.exchangeRate.rawValue] as? String
+		cardUsed = dict[Key.cardUsed.rawValue] as? String
 	}
 	
 	func toDict() -> [String: Any] {
@@ -233,5 +232,6 @@ class Transaction: Identifiable {
 }
 
 func priceToString(_ price: Int, currency: String = "USD") -> String {
-	return (price < 0 ? "-" : "") + "$" + String(format: "%01d.%02d", abs(price)/100, abs(price) % 100)
+	return (Decimal(price)/100).formatted(.currency(code: currency))
+//	return (price < 0 ? "-" : "") + "$" + String(format: "%01d.%02d", abs(price)/100, abs(price) % 100)
 }
