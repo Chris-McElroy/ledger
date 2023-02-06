@@ -16,23 +16,41 @@ struct ImportView: View {
 	@State var toSort: [(String, (Key) -> Void)] = []
 	@State var format: CSVFormat? = nil
 	@State var editingMap: Bool = false
+	@State var updater: Bool = false
 
 	var body: some View {
 		ZStack {
+			Spacer().opacity(updater ? 1 : 0)
 			List(storage.files.values.sorted(by: { a, _ in !a.sorted })) { file in
 				ZStack {
 					RoundedRectangle(cornerRadius: 10)
 						.stroke(file.id != blinkBorder ? Color.white : Color.clear, lineWidth: 2)
 						.foregroundColor(.black)
-					VStack {
-						Text(file.id)
-						HStack(spacing: 20) {
-							Text(String(file.count) + " transactions")
-							Text((file.earliestDate?.formatted(date: .abbreviated, time: .omitted) ?? "xx") + " - " + (file.latestDate?.formatted(date: .abbreviated, time: .omitted) ?? "xx"))
+						.opacity(file.sorted ? 0.25 : 1)
+					HStack {
+						Spacer()
+						Spacer()
+						VStack {
+							Text(file.id)
+							HStack(spacing: 20) {
+								Text(String(file.count) + " transactions")
+								Text((file.earliestDate?.formatted(date: .abbreviated, time: .omitted) ?? "xx") + " - " + (file.latestDate?.formatted(date: .abbreviated, time: .omitted) ?? "xx"))
+							}
 						}
+						.opacity(file.sorted ? 0.25 : 1)
+						Spacer()
+						Text(file.inverted ? "-" : "+").font(.system(size: 30)).padding(.horizontal, 20)
+							.onTapGesture {
+								file.inverted.toggle()
+								for t in file.allTransactions {
+									storage.transactions[t]?.inverted.toggle()
+								}
+								Storage.set(storage.transactions.map { $0.value.toDict() }, for: .transactions)
+								Storage.set(storage.files.map { $0.value.toDict() }, for: .files)
+								updater.toggle()
+							}
 					}
 				}
-				.opacity(file.sorted ? 0.25 : 1)
 				.frame(height: 60)
 			}
 			if storage.files.isEmpty {

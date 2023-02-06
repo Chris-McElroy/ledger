@@ -29,7 +29,7 @@ struct SortView: View {
 			if let transaction {
 				VStack {
 					Text("date: " + transaction.date.formatted(date: .long, time: .omitted))
-					Text("amount: " + transaction.amount.formatted(.currency(code: "USD")))
+					Text("amount: " + transaction.totalString())
 					if let merchant = transaction.merchant {
 						Text("merchant: " + merchant)
 					}
@@ -54,6 +54,7 @@ struct SortView: View {
 				Spacer()
 				HStack(alignment: .top, spacing: 20) {
 					VStack(spacing: 10) {
+						SortButton(type: .payments, sort: sort)
 						SortButton(type: .sweeps, sort: sort)
 						SortButton(type: .income, sort: sort)
 						Spacer()

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SummaryView: View {
 	let categories = [
+		CategorySummary(id: .payments, year: 2022),
 		CategorySummary(id: .sweeps, year: 2022),
 		CategorySummary(id: .income, year: 2022),
 		CategorySummary(id: .utilities, year: 2022),
@@ -26,7 +27,10 @@ struct SummaryView: View {
 		CategorySummary(id: .school, year: 2022),
 		CategorySummary(id: .climate, year: 2022),
 		CategorySummary(id: .politics, year: 2022),
-		CategorySummary(id: .patreon, year: 2022)
+		CategorySummary(id: .patreon, year: 2022),
+		CategorySummary(id: .blank, year: 2022),
+		CategorySummary(id: .net, year: 2022),
+		CategorySummary(id: .motion, year: 2022)
 	]
 	
 	static let monthNames = ["null", "january", "februrary", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
@@ -74,7 +78,9 @@ struct CategorySummary: Identifiable {
 	var december: String { getMonthSummary(for: 12) }
 	
 	func getMonthSummary(for month: Int) -> String {
-		let transactions = Storage.main.transactions.values.filter({ $0.myCategory == id }).filter({ Calendar.current.date($0.date, matchesComponents: DateComponents(year: year, month: month)) })
-		return priceToString(transactions.reduce(0, { $0 + $1.total }), currency: "USD")
+		guard id != .blank else { return "" }
+		let transactions = Storage.main.transactions.values.filter({ ((id == .net || id == .motion) && ($0.myCategory ?? .payments) != .payments) || $0.myCategory == id }).filter({ Calendar.current.date($0.date, matchesComponents: DateComponents(year: year, month: month)) })
+		let total = transactions.reduce(0, { $0 + (id == .motion ? abs($1.total) : $1.total) })
+		return (Decimal(total)/100).formatted(.currency(code: "USD"))
 	}
 }

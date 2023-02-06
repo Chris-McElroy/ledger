@@ -11,6 +11,7 @@ let dateFormatter = DateFormatter()
 
 enum MyCategory: String {
 	// TODO this is dumb and i should make these changable
+	case payments = "payments"
 	case sweeps = "sweeps"
 	case income = "income"
 	
@@ -32,6 +33,9 @@ enum MyCategory: String {
 	case climate = "climate"
 	case politics = "politics"
 	case patreon = "patreon"
+	case blank = ""
+	case net = "net"
+	case motion = "motion"
 }
 
 class Transaction: Identifiable {
@@ -41,7 +45,8 @@ class Transaction: Identifiable {
 	
 	// required
 	let date: Date
-	let amount: Int
+	let amount: Int // converted to decimal before printing
+	var inverted: Bool = false
 
 	// not required
 	let merchant: String? // appendable
@@ -63,7 +68,13 @@ class Transaction: Identifiable {
 	let exchangeRate: String?
 	let cardUsed: String?
 	
-	var total: Int { amount + (fees ?? 0) }
+	var total: Int { (inverted ? -1 : 1) * (amount + (fees ?? 0))  }
+	
+	func totalString(currency: String = "USD") -> String {
+		return (Decimal(total)/100).formatted(.currency(code: currency))
+ //	return (price < 0 ? "-" : "") + "$" + String(format: "%01d.%02d", abs(price)/100, abs(price) % 100)
+ }
+
 	
 	init?(from line: Substring, file: String, format: CSVFormat) {
 		id = Storage.getUniqueID()
@@ -182,13 +193,16 @@ class Transaction: Identifiable {
 		self.date = Date(timeIntervalSinceReferenceDate: date)
 		self.amount = amount
 		
+		if let inverted = dict[Key.inverted.rawValue] as? Bool {
+			self.inverted = inverted
+		} else { self.inverted = false }
 		if let myCategory = dict[Key.myCategory.rawValue] as? String {
 			self.myCategory = MyCategory(rawValue: myCategory)
 		} else { self.myCategory = nil }
 		merchant = dict[Key.merchant.rawValue] as? String
 		ref = dict[Key.ref.rawValue] as? String
 		description = dict[Key.description.rawValue] as? String
-		notes = dict[Key.ref.rawValue] as? String
+		notes = dict[Key.notes.rawValue] as? String
 		if let clearingDate = dict[Key.clearingDate.rawValue] as? Double {
 			self.clearingDate = Date(timeIntervalSinceReferenceDate: clearingDate)
 		} else { self.clearingDate = nil }
@@ -211,6 +225,7 @@ class Transaction: Identifiable {
 		dict[Key.myCategory.rawValue] = myCategory?.rawValue
 		dict[Key.date.rawValue] = date.timeIntervalSinceReferenceDate
 		dict[Key.amount.rawValue] = amount
+		dict[Key.inverted.rawValue] = inverted
 		dict[Key.merchant.rawValue] = merchant
 		dict[Key.ref.rawValue] = ref
 		dict[Key.description.rawValue] = description
@@ -229,9 +244,4 @@ class Transaction: Identifiable {
 		
 		return dict
 	}
-}
-
-func priceToString(_ price: Int, currency: String = "USD") -> String {
-	return (Decimal(price)/100).formatted(.currency(code: currency))
-//	return (price < 0 ? "-" : "") + "$" + String(format: "%01d.%02d", abs(price)/100, abs(price) % 100)
 }

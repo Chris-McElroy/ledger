@@ -28,7 +28,7 @@ enum Key: String {
 
 	case transactions, allTransactions, sortedTransactions, files, labelMapping, sorted
 	case myCategory, file
-	case id, count, earliestDate, latestDate
+	case id, inverted, count, earliestDate, latestDate
 	case uniqueID
 }
 
@@ -52,6 +52,7 @@ class Storage: ObservableObject {
 		for file in fileList {
 			newDict[file.id] = file
 		}
+		
 		return newDict
 	}
 	

@@ -9,6 +9,7 @@ import Foundation
 
 class File: Identifiable, Equatable {
 	let id: String
+	var inverted: Bool = false
 	var count: Int = 0
 	var allTransactions: [Int] = []
 	var sortedTransactions: [Int] = []
@@ -23,6 +24,7 @@ class File: Identifiable, Equatable {
 	
 	init?(data: Any) {
 		guard let dict = data as? [String: Any] else { return nil }
+		guard let inverted = dict[Key.inverted.rawValue] as? Bool else { return nil }
 		guard let id = dict[Key.id.rawValue] as? String else { return nil }
 		guard let count = dict[Key.count.rawValue] as? Int else { return nil }
 		guard let allTransactions = dict[Key.allTransactions.rawValue] as? [Int] else { return nil }
@@ -30,6 +32,7 @@ class File: Identifiable, Equatable {
 		guard let earliestDate = dict[Key.earliestDate.rawValue] as? Double else { return nil }
 		guard let latestDate = dict[Key.latestDate.rawValue] as? Double else { return nil }
 		self.id = id
+		self.inverted = inverted
 		self.count = count
 		self.allTransactions = allTransactions
 		self.sortedTransactions = sortedTransactions
@@ -55,6 +58,7 @@ class File: Identifiable, Equatable {
 	func toDict() -> [String: Any] {
 		var dict: [String: Any] = [:]
 		dict[Key.id.rawValue] = id
+		dict[Key.inverted.rawValue] = inverted
 		dict[Key.count.rawValue] = count
 		dict[Key.allTransactions.rawValue] = allTransactions
 		dict[Key.sortedTransactions.rawValue] = sortedTransactions
